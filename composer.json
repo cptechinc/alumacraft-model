@@ -1,10 +1,10 @@
 
 {
-	"name": "cptechinc/dpluso-model",
+	"name": "cptechinc/alumacraft-model",
     "type": "library",
     "description": "Classes for Dplus Online Session Database Tables",
     "keywords": ["dpluso-model", "quote", "cart", "cartquote", "detail", "qnote"],
-    "homepage": "http://github.com/cptechinc/dplus-model",
+    "homepage": "http://github.com/cptechinc/alumacraft-model",
 	"autoload": {
 		"classmap": ["src/", "src/Model/"]
 	}
