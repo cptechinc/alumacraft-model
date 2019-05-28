@@ -598,7 +598,7 @@ class SoDetailTableMap extends TableMap
         // columns
         $this->addForeignPrimaryKey('OehdNbr', 'Oehdnbr', 'INTEGER' , 'SO_HEADER', 'OehdNbr', true, 10, 0);
         $this->addPrimaryKey('OedtLine', 'Oedtline', 'INTEGER', true, 4, 0);
-        $this->addColumn('InitItemNbr', 'Inititemnbr', 'VARCHAR', false, 30, null);
+        $this->addForeignKey('InitItemNbr', 'Inititemnbr', 'VARCHAR', 'boat_master', 'ItemNbr', false, 30, null);
         $this->addColumn('OedtDesc', 'Oedtdesc', 'VARCHAR', false, 35, null);
         $this->addColumn('OedtDesc2', 'Oedtdesc2', 'VARCHAR', false, 35, null);
         $this->addColumn('IntbWhse', 'Intbwhse', 'VARCHAR', false, 2, null);
@@ -703,6 +703,13 @@ class SoDetailTableMap extends TableMap
   array (
     0 => ':OehdNbr',
     1 => ':OehdNbr',
+  ),
+), null, null, null, false);
+        $this->addRelation('BoatMaster', '\\BoatMaster', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':InitItemNbr',
+    1 => ':ItemNbr',
   ),
 ), null, null, null, false);
     } // buildRelations()

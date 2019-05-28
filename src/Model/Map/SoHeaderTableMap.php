@@ -980,7 +980,7 @@ class SoHeaderTableMap extends TableMap
         $this->addColumn('OehdStFirstName', 'Oehdstfirstname', 'VARCHAR', false, 14, null);
         $this->addColumn('OehdStAdr1', 'Oehdstadr1', 'VARCHAR', false, 45, null);
         $this->addColumn('OehdStAdr2', 'Oehdstadr2', 'VARCHAR', false, 30, null);
-        $this->addColumn('OehdStAdr3', 'Oehdstadr3', 'VARCHAR', true, 30, null);
+        $this->addColumn('OehdStAdr3', 'Oehdstadr3', 'VARCHAR', false, 30, null);
         $this->addColumn('OehdStCtry', 'Oehdstctry', 'VARCHAR', false, 4, null);
         $this->addColumn('OehdStCity', 'Oehdstcity', 'VARCHAR', false, 16, null);
         $this->addColumn('OehdStStat', 'Oehdststat', 'VARCHAR', false, 2, null);

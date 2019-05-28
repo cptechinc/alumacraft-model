@@ -10,6 +10,7 @@ use Map\BoatMasterTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -38,6 +39,18 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildBoatMasterQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildBoatMasterQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildBoatMasterQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildBoatMasterQuery leftJoinSoDetail($relationAlias = null) Adds a LEFT JOIN clause to the query using the SoDetail relation
+ * @method     ChildBoatMasterQuery rightJoinSoDetail($relationAlias = null) Adds a RIGHT JOIN clause to the query using the SoDetail relation
+ * @method     ChildBoatMasterQuery innerJoinSoDetail($relationAlias = null) Adds a INNER JOIN clause to the query using the SoDetail relation
+ *
+ * @method     ChildBoatMasterQuery joinWithSoDetail($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the SoDetail relation
+ *
+ * @method     ChildBoatMasterQuery leftJoinWithSoDetail() Adds a LEFT JOIN clause and with to the query using the SoDetail relation
+ * @method     ChildBoatMasterQuery rightJoinWithSoDetail() Adds a RIGHT JOIN clause and with to the query using the SoDetail relation
+ * @method     ChildBoatMasterQuery innerJoinWithSoDetail() Adds a INNER JOIN clause and with to the query using the SoDetail relation
+ *
+ * @method     \SoDetailQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildBoatMaster findOne(ConnectionInterface $con = null) Return the first ChildBoatMaster matching the query
  * @method     ChildBoatMaster findOneOrCreate(ConnectionInterface $con = null) Return the first ChildBoatMaster matching the query, or a new ChildBoatMaster object populated from the query conditions when no match is found
@@ -406,6 +419,79 @@ abstract class BoatMasterQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(BoatMasterTableMap::COL_DUMMY, $dummy, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \SoDetail object
+     *
+     * @param \SoDetail|ObjectCollection $soDetail the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildBoatMasterQuery The current query, for fluid interface
+     */
+    public function filterBySoDetail($soDetail, $comparison = null)
+    {
+        if ($soDetail instanceof \SoDetail) {
+            return $this
+                ->addUsingAlias(BoatMasterTableMap::COL_ITEMNBR, $soDetail->getInititemnbr(), $comparison);
+        } elseif ($soDetail instanceof ObjectCollection) {
+            return $this
+                ->useSoDetailQuery()
+                ->filterByPrimaryKeys($soDetail->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterBySoDetail() only accepts arguments of type \SoDetail or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the SoDetail relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildBoatMasterQuery The current query, for fluid interface
+     */
+    public function joinSoDetail($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('SoDetail');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'SoDetail');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the SoDetail relation SoDetail object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \SoDetailQuery A secondary query class using the current class as primary query
+     */
+    public function useSoDetailQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinSoDetail($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'SoDetail', '\SoDetailQuery');
     }
 
     /**

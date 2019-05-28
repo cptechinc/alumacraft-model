@@ -2,6 +2,8 @@
 
 namespace Base;
 
+use \BoatMaster as ChildBoatMaster;
+use \BoatMasterQuery as ChildBoatMasterQuery;
 use \SoDetailQuery as ChildSoDetailQuery;
 use \SoHeader as ChildSoHeader;
 use \SoHeaderQuery as ChildSoHeaderQuery;
@@ -732,6 +734,11 @@ abstract class SoDetail implements ActiveRecordInterface
      * @var        ChildSoHeader
      */
     protected $aSoHeader;
+
+    /**
+     * @var        ChildBoatMaster
+     */
+    protected $aBoatMaster;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -1989,6 +1996,10 @@ abstract class SoDetail implements ActiveRecordInterface
         if ($this->inititemnbr !== $v) {
             $this->inititemnbr = $v;
             $this->modifiedColumns[SoDetailTableMap::COL_INITITEMNBR] = true;
+        }
+
+        if ($this->aBoatMaster !== null && $this->aBoatMaster->getItemnbr() !== $v) {
+            $this->aBoatMaster = null;
         }
 
         return $this;
@@ -4195,6 +4206,9 @@ abstract class SoDetail implements ActiveRecordInterface
         if ($this->aSoHeader !== null && $this->oehdnbr !== $this->aSoHeader->getOehdnbr()) {
             $this->aSoHeader = null;
         }
+        if ($this->aBoatMaster !== null && $this->inititemnbr !== $this->aBoatMaster->getItemnbr()) {
+            $this->aBoatMaster = null;
+        }
     } // ensureConsistency
 
     /**
@@ -4235,6 +4249,7 @@ abstract class SoDetail implements ActiveRecordInterface
         if ($deep) {  // also de-associate any related objects?
 
             $this->aSoHeader = null;
+            $this->aBoatMaster = null;
         } // if (deep)
     }
 
@@ -4348,6 +4363,13 @@ abstract class SoDetail implements ActiveRecordInterface
                     $affectedRows += $this->aSoHeader->save($con);
                 }
                 $this->setSoHeader($this->aSoHeader);
+            }
+
+            if ($this->aBoatMaster !== null) {
+                if ($this->aBoatMaster->isModified() || $this->aBoatMaster->isNew()) {
+                    $affectedRows += $this->aBoatMaster->save($con);
+                }
+                $this->setBoatMaster($this->aBoatMaster);
             }
 
             if ($this->isNew() || $this->isModified()) {
@@ -5450,6 +5472,21 @@ abstract class SoDetail implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->aSoHeader->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aBoatMaster) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'boatMaster';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'boat_master';
+                        break;
+                    default:
+                        $key = 'BoatMaster';
+                }
+
+                $result[$key] = $this->aBoatMaster->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
         }
 
@@ -6682,6 +6719,57 @@ abstract class SoDetail implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildBoatMaster object.
+     *
+     * @param  ChildBoatMaster $v
+     * @return $this|\SoDetail The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setBoatMaster(ChildBoatMaster $v = null)
+    {
+        if ($v === null) {
+            $this->setInititemnbr(NULL);
+        } else {
+            $this->setInititemnbr($v->getItemnbr());
+        }
+
+        $this->aBoatMaster = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildBoatMaster object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSoDetail($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildBoatMaster object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildBoatMaster The associated ChildBoatMaster object.
+     * @throws PropelException
+     */
+    public function getBoatMaster(ConnectionInterface $con = null)
+    {
+        if ($this->aBoatMaster === null && (($this->inititemnbr !== "" && $this->inititemnbr !== null))) {
+            $this->aBoatMaster = ChildBoatMasterQuery::create()->findPk($this->inititemnbr, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aBoatMaster->addSoDetails($this);
+             */
+        }
+
+        return $this->aBoatMaster;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -6690,6 +6778,9 @@ abstract class SoDetail implements ActiveRecordInterface
     {
         if (null !== $this->aSoHeader) {
             $this->aSoHeader->removeSoDetail($this);
+        }
+        if (null !== $this->aBoatMaster) {
+            $this->aBoatMaster->removeSoDetail($this);
         }
         $this->oehdnbr = null;
         $this->oedtline = null;
@@ -6808,6 +6899,7 @@ abstract class SoDetail implements ActiveRecordInterface
         } // if ($deep)
 
         $this->aSoHeader = null;
+        $this->aBoatMaster = null;
     }
 
     /**

@@ -158,6 +158,13 @@ class BoatMasterTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('SoDetail', '\\SoDetail', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':InitItemNbr',
+    1 => ':ItemNbr',
+  ),
+), null, null, 'SoDetails', false);
     } // buildRelations()
 
     /**

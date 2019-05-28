@@ -429,6 +429,9 @@
     <foreign-key foreignTable="SO_HEADER">
       <reference local="OehdNbr" foreign="OehdNbr"/>
     </foreign-key>
+    <foreign-key foreignTable="boat_master">
+      <reference local="InitItemNbr" foreign="ItemNbr"/>
+    </foreign-key>
     <vendor type="mysql">
       <parameter name="Engine" value="MyISAM"/>
     </vendor>

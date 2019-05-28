@@ -230,7 +230,17 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSoDetailQuery rightJoinWithSoHeader() Adds a RIGHT JOIN clause and with to the query using the SoHeader relation
  * @method     ChildSoDetailQuery innerJoinWithSoHeader() Adds a INNER JOIN clause and with to the query using the SoHeader relation
  *
- * @method     \SoHeaderQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildSoDetailQuery leftJoinBoatMaster($relationAlias = null) Adds a LEFT JOIN clause to the query using the BoatMaster relation
+ * @method     ChildSoDetailQuery rightJoinBoatMaster($relationAlias = null) Adds a RIGHT JOIN clause to the query using the BoatMaster relation
+ * @method     ChildSoDetailQuery innerJoinBoatMaster($relationAlias = null) Adds a INNER JOIN clause to the query using the BoatMaster relation
+ *
+ * @method     ChildSoDetailQuery joinWithBoatMaster($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the BoatMaster relation
+ *
+ * @method     ChildSoDetailQuery leftJoinWithBoatMaster() Adds a LEFT JOIN clause and with to the query using the BoatMaster relation
+ * @method     ChildSoDetailQuery rightJoinWithBoatMaster() Adds a RIGHT JOIN clause and with to the query using the BoatMaster relation
+ * @method     ChildSoDetailQuery innerJoinWithBoatMaster() Adds a INNER JOIN clause and with to the query using the BoatMaster relation
+ *
+ * @method     \SoHeaderQuery|\BoatMasterQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildSoDetail findOne(ConnectionInterface $con = null) Return the first ChildSoDetail matching the query
  * @method     ChildSoDetail findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSoDetail matching the query, or a new ChildSoDetail object populated from the query conditions when no match is found
@@ -3898,6 +3908,83 @@ abstract class SoDetailQuery extends ModelCriteria
         return $this
             ->joinSoHeader($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'SoHeader', '\SoHeaderQuery');
+    }
+
+    /**
+     * Filter the query by a related \BoatMaster object
+     *
+     * @param \BoatMaster|ObjectCollection $boatMaster The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSoDetailQuery The current query, for fluid interface
+     */
+    public function filterByBoatMaster($boatMaster, $comparison = null)
+    {
+        if ($boatMaster instanceof \BoatMaster) {
+            return $this
+                ->addUsingAlias(SoDetailTableMap::COL_INITITEMNBR, $boatMaster->getItemnbr(), $comparison);
+        } elseif ($boatMaster instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SoDetailTableMap::COL_INITITEMNBR, $boatMaster->toKeyValue('PrimaryKey', 'Itemnbr'), $comparison);
+        } else {
+            throw new PropelException('filterByBoatMaster() only accepts arguments of type \BoatMaster or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the BoatMaster relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSoDetailQuery The current query, for fluid interface
+     */
+    public function joinBoatMaster($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('BoatMaster');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'BoatMaster');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the BoatMaster relation BoatMaster object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \BoatMasterQuery A secondary query class using the current class as primary query
+     */
+    public function useBoatMasterQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinBoatMaster($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'BoatMaster', '\BoatMasterQuery');
     }
 
     /**
