@@ -10,6 +10,7 @@ use Map\SoDetailTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -218,6 +219,18 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSoDetailQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildSoDetailQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildSoDetailQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildSoDetailQuery leftJoinSoHeader($relationAlias = null) Adds a LEFT JOIN clause to the query using the SoHeader relation
+ * @method     ChildSoDetailQuery rightJoinSoHeader($relationAlias = null) Adds a RIGHT JOIN clause to the query using the SoHeader relation
+ * @method     ChildSoDetailQuery innerJoinSoHeader($relationAlias = null) Adds a INNER JOIN clause to the query using the SoHeader relation
+ *
+ * @method     ChildSoDetailQuery joinWithSoHeader($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the SoHeader relation
+ *
+ * @method     ChildSoDetailQuery leftJoinWithSoHeader() Adds a LEFT JOIN clause and with to the query using the SoHeader relation
+ * @method     ChildSoDetailQuery rightJoinWithSoHeader() Adds a RIGHT JOIN clause and with to the query using the SoHeader relation
+ * @method     ChildSoDetailQuery innerJoinWithSoHeader() Adds a INNER JOIN clause and with to the query using the SoHeader relation
+ *
+ * @method     \SoHeaderQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildSoDetail findOne(ConnectionInterface $con = null) Return the first ChildSoDetail matching the query
  * @method     ChildSoDetail findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSoDetail matching the query, or a new ChildSoDetail object populated from the query conditions when no match is found
@@ -722,6 +735,8 @@ abstract class SoDetailQuery extends ModelCriteria
      * $query->filterByOehdnbr(array(12, 34)); // WHERE OehdNbr IN (12, 34)
      * $query->filterByOehdnbr(array('min' => 12)); // WHERE OehdNbr > 12
      * </code>
+     *
+     * @see       filterBySoHeader()
      *
      * @param     mixed $oehdnbr The value to use as filter.
      *              Use scalar values for equality.
@@ -3806,6 +3821,83 @@ abstract class SoDetailQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(SoDetailTableMap::COL_DUMMY, $dummy, $comparison);
+    }
+
+    /**
+     * Filter the query by a related \SoHeader object
+     *
+     * @param \SoHeader|ObjectCollection $soHeader The related object(s) to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return ChildSoDetailQuery The current query, for fluid interface
+     */
+    public function filterBySoHeader($soHeader, $comparison = null)
+    {
+        if ($soHeader instanceof \SoHeader) {
+            return $this
+                ->addUsingAlias(SoDetailTableMap::COL_OEHDNBR, $soHeader->getOehdnbr(), $comparison);
+        } elseif ($soHeader instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            return $this
+                ->addUsingAlias(SoDetailTableMap::COL_OEHDNBR, $soHeader->toKeyValue('PrimaryKey', 'Oehdnbr'), $comparison);
+        } else {
+            throw new PropelException('filterBySoHeader() only accepts arguments of type \SoHeader or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the SoHeader relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSoDetailQuery The current query, for fluid interface
+     */
+    public function joinSoHeader($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('SoHeader');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'SoHeader');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the SoHeader relation SoHeader object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \SoHeaderQuery A secondary query class using the current class as primary query
+     */
+    public function useSoHeaderQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSoHeader($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'SoHeader', '\SoHeaderQuery');
     }
 
     /**

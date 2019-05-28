@@ -12,7 +12,10 @@ use Base\BoatInventory as BaseBoatInventory;
  * long as it does not already exist in the output directory.
  *
  */
-class BoatInventory extends BaseBoatInventory
-{
+class BoatInventory extends BaseBoatInventory {
+	const REGISTERED_TRUE  = 'Y';
+	const REGISTERED_FALSE = 'N';
+	const REGISTERED_SOLD  = 'S';
 
+	const REGISTERED_ALLOWED = array('Y', 'N', 'S');
 }

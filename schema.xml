@@ -426,6 +426,9 @@
     <column name="DateUpdtd" phpName="Dateupdtd" type="INTEGER" size="8"/>
     <column name="TimeUpdtd" phpName="Timeupdtd" type="INTEGER" size="8"/>
     <column name="dummy" phpName="Dummy" type="VARCHAR" size="1"/>
+    <foreign-key foreignTable="SO_HEADER">
+      <reference local="OehdNbr" foreign="OehdNbr"/>
+    </foreign-key>
     <vendor type="mysql">
       <parameter name="Engine" value="MyISAM"/>
     </vendor>
@@ -440,7 +443,7 @@
     <column name="OehdStFirstName" phpName="Oehdstfirstname" type="VARCHAR" size="14"/>
     <column name="OehdStAdr1" phpName="Oehdstadr1" type="VARCHAR" size="45"/>
     <column name="OehdStAdr2" phpName="Oehdstadr2" type="VARCHAR" size="30"/>
-    <column name="OehdStAdr3" phpName="Oehdstadr3" type="VARCHAR" size="30" primaryKey="true" required="true"/>
+    <column name="OehdStAdr3" phpName="Oehdstadr3" type="VARCHAR" size="30"/>
     <column name="OehdStCtry" phpName="Oehdstctry" type="VARCHAR" size="4"/>
     <column name="OehdStCity" phpName="Oehdstcity" type="VARCHAR" size="16"/>
     <column name="OehdStStat" phpName="Oehdststat" type="VARCHAR" size="2"/>

@@ -980,7 +980,7 @@ class SoHeaderTableMap extends TableMap
         $this->addColumn('OehdStFirstName', 'Oehdstfirstname', 'VARCHAR', false, 14, null);
         $this->addColumn('OehdStAdr1', 'Oehdstadr1', 'VARCHAR', false, 45, null);
         $this->addColumn('OehdStAdr2', 'Oehdstadr2', 'VARCHAR', false, 30, null);
-        $this->addPrimaryKey('OehdStAdr3', 'Oehdstadr3', 'VARCHAR', true, 30, null);
+        $this->addColumn('OehdStAdr3', 'Oehdstadr3', 'VARCHAR', true, 30, null);
         $this->addColumn('OehdStCtry', 'Oehdstctry', 'VARCHAR', false, 4, null);
         $this->addColumn('OehdStCity', 'Oehdstcity', 'VARCHAR', false, 16, null);
         $this->addColumn('OehdStStat', 'Oehdststat', 'VARCHAR', false, 2, null);
@@ -1148,60 +1148,14 @@ class SoHeaderTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('SoDetail', '\\SoDetail', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':OehdNbr',
+    1 => ':OehdNbr',
+  ),
+), null, null, 'SoDetails', false);
     } // buildRelations()
-
-    /**
-     * Adds an object to the instance pool.
-     *
-     * Propel keeps cached copies of objects in an instance pool when they are retrieved
-     * from the database. In some cases you may need to explicitly add objects
-     * to the cache in order to ensure that the same objects are always returned by find*()
-     * and findPk*() calls.
-     *
-     * @param \SoHeader $obj A \SoHeader object.
-     * @param string $key             (optional) key to use for instance map (for performance boost if key was already calculated externally).
-     */
-    public static function addInstanceToPool($obj, $key = null)
-    {
-        if (Propel::isInstancePoolingEnabled()) {
-            if (null === $key) {
-                $key = serialize([(null === $obj->getOehdnbr() || is_scalar($obj->getOehdnbr()) || is_callable([$obj->getOehdnbr(), '__toString']) ? (string) $obj->getOehdnbr() : $obj->getOehdnbr()), (null === $obj->getOehdstadr3() || is_scalar($obj->getOehdstadr3()) || is_callable([$obj->getOehdstadr3(), '__toString']) ? (string) $obj->getOehdstadr3() : $obj->getOehdstadr3())]);
-            } // if key === null
-            self::$instances[$key] = $obj;
-        }
-    }
-
-    /**
-     * Removes an object from the instance pool.
-     *
-     * Propel keeps cached copies of objects in an instance pool when they are retrieved
-     * from the database.  In some cases -- especially when you override doDelete
-     * methods in your stub classes -- you may need to explicitly remove objects
-     * from the cache in order to prevent returning objects that no longer exist.
-     *
-     * @param mixed $value A \SoHeader object or a primary key value.
-     */
-    public static function removeInstanceFromPool($value)
-    {
-        if (Propel::isInstancePoolingEnabled() && null !== $value) {
-            if (is_object($value) && $value instanceof \SoHeader) {
-                $key = serialize([(null === $value->getOehdnbr() || is_scalar($value->getOehdnbr()) || is_callable([$value->getOehdnbr(), '__toString']) ? (string) $value->getOehdnbr() : $value->getOehdnbr()), (null === $value->getOehdstadr3() || is_scalar($value->getOehdstadr3()) || is_callable([$value->getOehdstadr3(), '__toString']) ? (string) $value->getOehdstadr3() : $value->getOehdstadr3())]);
-
-            } elseif (is_array($value) && count($value) === 2) {
-                // assume we've been passed a primary key";
-                $key = serialize([(null === $value[0] || is_scalar($value[0]) || is_callable([$value[0], '__toString']) ? (string) $value[0] : $value[0]), (null === $value[1] || is_scalar($value[1]) || is_callable([$value[1], '__toString']) ? (string) $value[1] : $value[1])]);
-            } elseif ($value instanceof Criteria) {
-                self::$instances = [];
-
-                return;
-            } else {
-                $e = new PropelException("Invalid value passed to removeInstanceFromPool().  Expected primary key or \SoHeader object; got " . (is_object($value) ? get_class($value) . ' object.' : var_export($value, true)));
-                throw $e;
-            }
-
-            unset(self::$instances[$key]);
-        }
-    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
@@ -1219,11 +1173,11 @@ class SoHeaderTableMap extends TableMap
     public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
         // If the PK cannot be derived from the row, return NULL.
-        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 9 + $offset : static::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)] === null) {
+        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)] === null) {
             return null;
         }
 
-        return serialize([(null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)]), (null === $row[TableMap::TYPE_NUM == $indexType ? 9 + $offset : static::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 9 + $offset : static::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 9 + $offset : static::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 9 + $offset : static::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 9 + $offset : static::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)])]);
+        return null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)];
     }
 
     /**
@@ -1240,20 +1194,11 @@ class SoHeaderTableMap extends TableMap
      */
     public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-            $pks = [];
-
-        $pks[] = (int) $row[
+        return (int) $row[
             $indexType == TableMap::TYPE_NUM
                 ? 0 + $offset
                 : self::translateFieldName('Oehdnbr', TableMap::TYPE_PHPNAME, $indexType)
         ];
-        $pks[] = (string) $row[
-            $indexType == TableMap::TYPE_NUM
-                ? 9 + $offset
-                : self::translateFieldName('Oehdstadr3', TableMap::TYPE_PHPNAME, $indexType)
-        ];
-
-        return $pks;
     }
 
     /**
@@ -1745,17 +1690,7 @@ class SoHeaderTableMap extends TableMap
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
             $criteria = new Criteria(SoHeaderTableMap::DATABASE_NAME);
-            // primary key is composite; we therefore, expect
-            // the primary key passed to be an array of pkey values
-            if (count($values) == count($values, COUNT_RECURSIVE)) {
-                // array is not multi-dimensional
-                $values = array($values);
-            }
-            foreach ($values as $value) {
-                $criterion = $criteria->getNewCriterion(SoHeaderTableMap::COL_OEHDNBR, $value[0]);
-                $criterion->addAnd($criteria->getNewCriterion(SoHeaderTableMap::COL_OEHDSTADR3, $value[1]));
-                $criteria->addOr($criterion);
-            }
+            $criteria->add(SoHeaderTableMap::COL_OEHDNBR, (array) $values, Criteria::IN);
         }
 
         $query = SoHeaderQuery::create()->mergeWith($criteria);

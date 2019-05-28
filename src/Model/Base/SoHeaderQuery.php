@@ -10,6 +10,7 @@ use Map\SoHeaderTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
@@ -368,6 +369,18 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildSoHeaderQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildSoHeaderQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildSoHeaderQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildSoHeaderQuery leftJoinSoDetail($relationAlias = null) Adds a LEFT JOIN clause to the query using the SoDetail relation
+ * @method     ChildSoHeaderQuery rightJoinSoDetail($relationAlias = null) Adds a RIGHT JOIN clause to the query using the SoDetail relation
+ * @method     ChildSoHeaderQuery innerJoinSoDetail($relationAlias = null) Adds a INNER JOIN clause to the query using the SoDetail relation
+ *
+ * @method     ChildSoHeaderQuery joinWithSoDetail($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the SoDetail relation
+ *
+ * @method     ChildSoHeaderQuery leftJoinWithSoDetail() Adds a LEFT JOIN clause and with to the query using the SoDetail relation
+ * @method     ChildSoHeaderQuery rightJoinWithSoDetail() Adds a RIGHT JOIN clause and with to the query using the SoDetail relation
+ * @method     ChildSoHeaderQuery innerJoinWithSoDetail() Adds a INNER JOIN clause and with to the query using the SoDetail relation
+ *
+ * @method     \SoDetailQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildSoHeader findOne(ConnectionInterface $con = null) Return the first ChildSoHeader matching the query
  * @method     ChildSoHeader findOneOrCreate(ConnectionInterface $con = null) Return the first ChildSoHeader matching the query, or a new ChildSoHeader object populated from the query conditions when no match is found
@@ -937,10 +950,10 @@ abstract class SoHeaderQuery extends ModelCriteria
      * Go fast if the query is untouched.
      *
      * <code>
-     * $obj = $c->findPk(array(12, 34), $con);
+     * $obj  = $c->findPk(12, $con);
      * </code>
      *
-     * @param array[$OehdNbr, $OehdStAdr3] $key Primary key to use for the query
+     * @param mixed $key Primary key to use for the query
      * @param ConnectionInterface $con an optional connection object
      *
      * @return ChildSoHeader|array|mixed the result, formatted by the current formatter
@@ -965,7 +978,7 @@ abstract class SoHeaderQuery extends ModelCriteria
             return $this->findPkComplex($key, $con);
         }
 
-        if ((null !== ($obj = SoHeaderTableMap::getInstanceFromPool(serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]))))) {
+        if ((null !== ($obj = SoHeaderTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
             // the object is already in the instance pool
             return $obj;
         }
@@ -986,11 +999,10 @@ abstract class SoHeaderQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT OehdNbr, OehdStat, OehdHold, ArcuCustId, ArstShipId, OehdStLastName, OehdStFirstName, OehdStAdr1, OehdStAdr2, OehdStAdr3, OehdStCtry, OehdStCity, OehdStStat, OehdStZipCode, OehdCustPo, OehdOrdrDate, ArtmTermCd, ArtbShipVia, ArinInvNbr, OehdInvDate, OehdGLPd, ArspSalePer1, OehdSp1Pct, ArspSalePer2, OehdSp2Pct, ArspSalePer3, OehdSp3Pct, OehdCntrNbr, OehdDropRelHold, OehdTaxSub, OehdNonTaxSub, OehdTaxTot, OehdFrtTot, OehdMiscTot, OehdOrdrTot, OehdCostTot, OehdSpCommLock, OehdTakenDate, OehdTakenTime, OehdPickDate, OehdPickTime, OehdPackDate, OehdPackTime, OehdVerifyDate, OehdVerifyTime, OehdCreditMemo, OehdBookedYn, IntbWhseOrig, OehdBtStat, OehdShipComp, OehdCwoFlag, OehdDivision, OehdTakenCode, OehdPickCode, OehdPackCode, OehdVerifyCode, OehdTotDisc, OehdEdiRefNbrQual, OehdUserCode1, OehdUserCode2, OehdUserCode3, OehdUserCode4, OehdExchCtry, OehdExchRate, OehdWght, OehdQbPacker, OehdQbLabeler1, OehdQbLabeler2, OehdBoxCount, OehdRqstDate, OehdCancDate, OehdCrntUser, OehdReleaseNbr, IntbWhse, OehdBordBuildDate, OehdDeptCode, OehdFrtInEntered, DropShipEntered, OehdErFlag, OehdFrtIn, OehdDropShip, OehdMinOrder, OehdContractTerms, OehdDiscDate1, OehdDiscPct1, OehdDueDate1, OehdDueAmt1, OehdDuePct1, OehdDiscDate2, OehdDiscPct2, OehdDueDate2, OehdDueAmt2, OehdDuePct2, OehdDiscDate3, OehdDiscPct3, OehdDueDate3, OehdDueAmt3, OehdDuePct3, OehdDiscDate4, OehdDiscPct4, OehdDueDate4, OehdDueAmt4, OehdDuePct4, OehdDiscDate5, OehdDiscPct5, OehdDueDate5, OehdDueAmt5, OehdDuePct5, OehdDropShipBilled, OehdOrdTyp, OehdTrackNbr, OehdSource, OehdCcAprv, OehdPickFmatType, OehdInvcFmatType, OehdCashAmt, OehdCheckAmt, OehdCheckNbr, OehdDepositAmt, OehdDepositNbr, OehdCcAmt, OehdOTaxSub, OehdONonTaxSub, OehdOTaxTot, OehdOOrdrTot, OehdPickPrintDate, OehdPickPrintTime, OehdCont, OehdContTeleIntl, OehdContTeleNbr, OehdContTeleExt, OehdContFaxIntl, OehdContFaxNbr, OehdMailId, OehdChgDue, OehdAddlPricDisc, OehdAllShip, OehdQtyOrderAmt, OehdQtyTaxTot, OehdQtyFrtIn, OehdOrideShipComp, OehdContEmail, OehdManualFrt, OehdInternalFrt, OehdFrtCost, OehdRoute, OehdRouteSeq, OehdFrtTaxCode1, OehdFrtTaxAmt1, OehdFrtTaxCode2, OehdFrtTaxAmt2, OehdFrtTaxCode3, OehdFrtTaxAmt3, OehdFrtTaxCode4, OehdFrtTaxAmt4, OehdFrtTaxCode5, OehdFrtTaxAmt5, OehdEdi855Sent, OehdFrt3rdParty, OehdFob, OehdConfirmImagYn, OehdCstkConsign, OehdStoreId, OehdPickQueue, OehdArrvDate, OehdSurchgStat, OehdFrtGrup, DateUpdtd, TimeUpdtd, dummy FROM SO_HEADER WHERE OehdNbr = :p0 AND OehdStAdr3 = :p1';
+        $sql = 'SELECT OehdNbr, OehdStat, OehdHold, ArcuCustId, ArstShipId, OehdStLastName, OehdStFirstName, OehdStAdr1, OehdStAdr2, OehdStAdr3, OehdStCtry, OehdStCity, OehdStStat, OehdStZipCode, OehdCustPo, OehdOrdrDate, ArtmTermCd, ArtbShipVia, ArinInvNbr, OehdInvDate, OehdGLPd, ArspSalePer1, OehdSp1Pct, ArspSalePer2, OehdSp2Pct, ArspSalePer3, OehdSp3Pct, OehdCntrNbr, OehdDropRelHold, OehdTaxSub, OehdNonTaxSub, OehdTaxTot, OehdFrtTot, OehdMiscTot, OehdOrdrTot, OehdCostTot, OehdSpCommLock, OehdTakenDate, OehdTakenTime, OehdPickDate, OehdPickTime, OehdPackDate, OehdPackTime, OehdVerifyDate, OehdVerifyTime, OehdCreditMemo, OehdBookedYn, IntbWhseOrig, OehdBtStat, OehdShipComp, OehdCwoFlag, OehdDivision, OehdTakenCode, OehdPickCode, OehdPackCode, OehdVerifyCode, OehdTotDisc, OehdEdiRefNbrQual, OehdUserCode1, OehdUserCode2, OehdUserCode3, OehdUserCode4, OehdExchCtry, OehdExchRate, OehdWght, OehdQbPacker, OehdQbLabeler1, OehdQbLabeler2, OehdBoxCount, OehdRqstDate, OehdCancDate, OehdCrntUser, OehdReleaseNbr, IntbWhse, OehdBordBuildDate, OehdDeptCode, OehdFrtInEntered, DropShipEntered, OehdErFlag, OehdFrtIn, OehdDropShip, OehdMinOrder, OehdContractTerms, OehdDiscDate1, OehdDiscPct1, OehdDueDate1, OehdDueAmt1, OehdDuePct1, OehdDiscDate2, OehdDiscPct2, OehdDueDate2, OehdDueAmt2, OehdDuePct2, OehdDiscDate3, OehdDiscPct3, OehdDueDate3, OehdDueAmt3, OehdDuePct3, OehdDiscDate4, OehdDiscPct4, OehdDueDate4, OehdDueAmt4, OehdDuePct4, OehdDiscDate5, OehdDiscPct5, OehdDueDate5, OehdDueAmt5, OehdDuePct5, OehdDropShipBilled, OehdOrdTyp, OehdTrackNbr, OehdSource, OehdCcAprv, OehdPickFmatType, OehdInvcFmatType, OehdCashAmt, OehdCheckAmt, OehdCheckNbr, OehdDepositAmt, OehdDepositNbr, OehdCcAmt, OehdOTaxSub, OehdONonTaxSub, OehdOTaxTot, OehdOOrdrTot, OehdPickPrintDate, OehdPickPrintTime, OehdCont, OehdContTeleIntl, OehdContTeleNbr, OehdContTeleExt, OehdContFaxIntl, OehdContFaxNbr, OehdMailId, OehdChgDue, OehdAddlPricDisc, OehdAllShip, OehdQtyOrderAmt, OehdQtyTaxTot, OehdQtyFrtIn, OehdOrideShipComp, OehdContEmail, OehdManualFrt, OehdInternalFrt, OehdFrtCost, OehdRoute, OehdRouteSeq, OehdFrtTaxCode1, OehdFrtTaxAmt1, OehdFrtTaxCode2, OehdFrtTaxAmt2, OehdFrtTaxCode3, OehdFrtTaxAmt3, OehdFrtTaxCode4, OehdFrtTaxAmt4, OehdFrtTaxCode5, OehdFrtTaxAmt5, OehdEdi855Sent, OehdFrt3rdParty, OehdFob, OehdConfirmImagYn, OehdCstkConsign, OehdStoreId, OehdPickQueue, OehdArrvDate, OehdSurchgStat, OehdFrtGrup, DateUpdtd, TimeUpdtd, dummy FROM SO_HEADER WHERE OehdNbr = :p0';
         try {
             $stmt = $con->prepare($sql);
-            $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
-            $stmt->bindValue(':p1', $key[1], PDO::PARAM_STR);
+            $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
             $stmt->execute();
         } catch (Exception $e) {
             Propel::log($e->getMessage(), Propel::LOG_ERR);
@@ -1001,7 +1013,7 @@ abstract class SoHeaderQuery extends ModelCriteria
             /** @var ChildSoHeader $obj */
             $obj = new ChildSoHeader();
             $obj->hydrate($row);
-            SoHeaderTableMap::addInstanceToPool($obj, serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]));
+            SoHeaderTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
         }
         $stmt->closeCursor();
 
@@ -1030,7 +1042,7 @@ abstract class SoHeaderQuery extends ModelCriteria
     /**
      * Find objects by primary key
      * <code>
-     * $objs = $c->findPks(array(array(12, 56), array(832, 123), array(123, 456)), $con);
+     * $objs = $c->findPks(array(12, 56, 832), $con);
      * </code>
      * @param     array $keys Primary keys to use for the query
      * @param     ConnectionInterface $con an optional connection object
@@ -1060,10 +1072,8 @@ abstract class SoHeaderQuery extends ModelCriteria
      */
     public function filterByPrimaryKey($key)
     {
-        $this->addUsingAlias(SoHeaderTableMap::COL_OEHDNBR, $key[0], Criteria::EQUAL);
-        $this->addUsingAlias(SoHeaderTableMap::COL_OEHDSTADR3, $key[1], Criteria::EQUAL);
 
-        return $this;
+        return $this->addUsingAlias(SoHeaderTableMap::COL_OEHDNBR, $key, Criteria::EQUAL);
     }
 
     /**
@@ -1075,17 +1085,8 @@ abstract class SoHeaderQuery extends ModelCriteria
      */
     public function filterByPrimaryKeys($keys)
     {
-        if (empty($keys)) {
-            return $this->add(null, '1<>1', Criteria::CUSTOM);
-        }
-        foreach ($keys as $key) {
-            $cton0 = $this->getNewCriterion(SoHeaderTableMap::COL_OEHDNBR, $key[0], Criteria::EQUAL);
-            $cton1 = $this->getNewCriterion(SoHeaderTableMap::COL_OEHDSTADR3, $key[1], Criteria::EQUAL);
-            $cton0->addAnd($cton1);
-            $this->addOr($cton0);
-        }
 
-        return $this;
+        return $this->addUsingAlias(SoHeaderTableMap::COL_OEHDNBR, $keys, Criteria::IN);
     }
 
     /**
@@ -6715,6 +6716,79 @@ abstract class SoHeaderQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query by a related \SoDetail object
+     *
+     * @param \SoDetail|ObjectCollection $soDetail the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildSoHeaderQuery The current query, for fluid interface
+     */
+    public function filterBySoDetail($soDetail, $comparison = null)
+    {
+        if ($soDetail instanceof \SoDetail) {
+            return $this
+                ->addUsingAlias(SoHeaderTableMap::COL_OEHDNBR, $soDetail->getOehdnbr(), $comparison);
+        } elseif ($soDetail instanceof ObjectCollection) {
+            return $this
+                ->useSoDetailQuery()
+                ->filterByPrimaryKeys($soDetail->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterBySoDetail() only accepts arguments of type \SoDetail or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the SoDetail relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildSoHeaderQuery The current query, for fluid interface
+     */
+    public function joinSoDetail($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('SoDetail');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'SoDetail');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the SoDetail relation SoDetail object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \SoDetailQuery A secondary query class using the current class as primary query
+     */
+    public function useSoDetailQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSoDetail($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'SoDetail', '\SoDetailQuery');
+    }
+
+    /**
      * Exclude object from result
      *
      * @param   ChildSoHeader $soHeader Object to remove from the list of results
@@ -6724,9 +6798,7 @@ abstract class SoHeaderQuery extends ModelCriteria
     public function prune($soHeader = null)
     {
         if ($soHeader) {
-            $this->addCond('pruneCond0', $this->getAliasedColName(SoHeaderTableMap::COL_OEHDNBR), $soHeader->getOehdnbr(), Criteria::NOT_EQUAL);
-            $this->addCond('pruneCond1', $this->getAliasedColName(SoHeaderTableMap::COL_OEHDSTADR3), $soHeader->getOehdstadr3(), Criteria::NOT_EQUAL);
-            $this->combine(array('pruneCond0', 'pruneCond1'), Criteria::LOGICAL_OR);
+            $this->addUsingAlias(SoHeaderTableMap::COL_OEHDNBR, $soHeader->getOehdnbr(), Criteria::NOT_EQUAL);
         }
 
         return $this;

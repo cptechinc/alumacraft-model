@@ -2,15 +2,20 @@
 
 namespace Base;
 
+use \SoDetail as ChildSoDetail;
+use \SoDetailQuery as ChildSoDetailQuery;
+use \SoHeader as ChildSoHeader;
 use \SoHeaderQuery as ChildSoHeaderQuery;
 use \Exception;
 use \PDO;
+use Map\SoDetailTableMap;
 use Map\SoHeaderTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -1251,12 +1256,24 @@ abstract class SoHeader implements ActiveRecordInterface
     protected $dummy;
 
     /**
+     * @var        ObjectCollection|ChildSoDetail[] Collection to store aggregation of ChildSoDetail objects.
+     */
+    protected $collSoDetails;
+    protected $collSoDetailsPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
      * @var boolean
      */
     protected $alreadyInSave = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSoDetail[]
+     */
+    protected $soDetailsScheduledForDeletion = null;
 
     /**
      * Applies default values to this object.
@@ -7214,6 +7231,8 @@ abstract class SoHeader implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collSoDetails = null;
+
         } // if (deep)
     }
 
@@ -7326,6 +7345,23 @@ abstract class SoHeader implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->soDetailsScheduledForDeletion !== null) {
+                if (!$this->soDetailsScheduledForDeletion->isEmpty()) {
+                    \SoDetailQuery::create()
+                        ->filterByPrimaryKeys($this->soDetailsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->soDetailsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSoDetails !== null) {
+                foreach ($this->collSoDetails as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -8963,10 +8999,11 @@ abstract class SoHeader implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['SoHeader'][$this->hashCode()])) {
@@ -9151,6 +9188,23 @@ abstract class SoHeader implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collSoDetails) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'soDetails';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'SO_DETAILs';
+                        break;
+                    default:
+                        $key = 'SoDetails';
+                }
+
+                $result[$key] = $this->collSoDetails->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -10799,7 +10853,6 @@ abstract class SoHeader implements ActiveRecordInterface
     {
         $criteria = ChildSoHeaderQuery::create();
         $criteria->add(SoHeaderTableMap::COL_OEHDNBR, $this->oehdnbr);
-        $criteria->add(SoHeaderTableMap::COL_OEHDSTADR3, $this->oehdstadr3);
 
         return $criteria;
     }
@@ -10812,8 +10865,7 @@ abstract class SoHeader implements ActiveRecordInterface
      */
     public function hashCode()
     {
-        $validPk = null !== $this->getOehdnbr() &&
-            null !== $this->getOehdstadr3();
+        $validPk = null !== $this->getOehdnbr();
 
         $validPrimaryKeyFKs = 0;
         $primaryKeyFKs = [];
@@ -10828,29 +10880,23 @@ abstract class SoHeader implements ActiveRecordInterface
     }
 
     /**
-     * Returns the composite primary key for this object.
-     * The array elements will be in same order as specified in XML.
-     * @return array
+     * Returns the primary key for this object (row).
+     * @return int
      */
     public function getPrimaryKey()
     {
-        $pks = array();
-        $pks[0] = $this->getOehdnbr();
-        $pks[1] = $this->getOehdstadr3();
-
-        return $pks;
+        return $this->getOehdnbr();
     }
 
     /**
-     * Set the [composite] primary key.
+     * Generic method to set the primary key (oehdnbr column).
      *
-     * @param      array $keys The elements of the composite key (order must match the order in XML file).
+     * @param       int $key Primary key.
      * @return void
      */
-    public function setPrimaryKey($keys)
+    public function setPrimaryKey($key)
     {
-        $this->setOehdnbr($keys[0]);
-        $this->setOehdstadr3($keys[1]);
+        $this->setOehdnbr($key);
     }
 
     /**
@@ -10859,7 +10905,7 @@ abstract class SoHeader implements ActiveRecordInterface
      */
     public function isPrimaryKeyNull()
     {
-        return (null === $this->getOehdnbr()) && (null === $this->getOehdstadr3());
+        return null === $this->getOehdnbr();
     }
 
     /**
@@ -11045,6 +11091,20 @@ abstract class SoHeader implements ActiveRecordInterface
         $copyObj->setDateupdtd($this->getDateupdtd());
         $copyObj->setTimeupdtd($this->getTimeupdtd());
         $copyObj->setDummy($this->getDummy());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getSoDetails() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSoDetail($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -11070,6 +11130,251 @@ abstract class SoHeader implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param      string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('SoDetail' == $relationName) {
+            $this->initSoDetails();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collSoDetails collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSoDetails()
+     */
+    public function clearSoDetails()
+    {
+        $this->collSoDetails = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSoDetails collection loaded partially.
+     */
+    public function resetPartialSoDetails($v = true)
+    {
+        $this->collSoDetailsPartial = $v;
+    }
+
+    /**
+     * Initializes the collSoDetails collection.
+     *
+     * By default this just sets the collSoDetails collection to an empty array (like clearcollSoDetails());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSoDetails($overrideExisting = true)
+    {
+        if (null !== $this->collSoDetails && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SoDetailTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSoDetails = new $collectionClassName;
+        $this->collSoDetails->setModel('\SoDetail');
+    }
+
+    /**
+     * Gets an array of ChildSoDetail objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildSoHeader is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSoDetail[] List of ChildSoDetail objects
+     * @throws PropelException
+     */
+    public function getSoDetails(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSoDetailsPartial && !$this->isNew();
+        if (null === $this->collSoDetails || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collSoDetails) {
+                // return empty collection
+                $this->initSoDetails();
+            } else {
+                $collSoDetails = ChildSoDetailQuery::create(null, $criteria)
+                    ->filterBySoHeader($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSoDetailsPartial && count($collSoDetails)) {
+                        $this->initSoDetails(false);
+
+                        foreach ($collSoDetails as $obj) {
+                            if (false == $this->collSoDetails->contains($obj)) {
+                                $this->collSoDetails->append($obj);
+                            }
+                        }
+
+                        $this->collSoDetailsPartial = true;
+                    }
+
+                    return $collSoDetails;
+                }
+
+                if ($partial && $this->collSoDetails) {
+                    foreach ($this->collSoDetails as $obj) {
+                        if ($obj->isNew()) {
+                            $collSoDetails[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSoDetails = $collSoDetails;
+                $this->collSoDetailsPartial = false;
+            }
+        }
+
+        return $this->collSoDetails;
+    }
+
+    /**
+     * Sets a collection of ChildSoDetail objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $soDetails A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildSoHeader The current object (for fluent API support)
+     */
+    public function setSoDetails(Collection $soDetails, ConnectionInterface $con = null)
+    {
+        /** @var ChildSoDetail[] $soDetailsToDelete */
+        $soDetailsToDelete = $this->getSoDetails(new Criteria(), $con)->diff($soDetails);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->soDetailsScheduledForDeletion = clone $soDetailsToDelete;
+
+        foreach ($soDetailsToDelete as $soDetailRemoved) {
+            $soDetailRemoved->setSoHeader(null);
+        }
+
+        $this->collSoDetails = null;
+        foreach ($soDetails as $soDetail) {
+            $this->addSoDetail($soDetail);
+        }
+
+        $this->collSoDetails = $soDetails;
+        $this->collSoDetailsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related SoDetail objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related SoDetail objects.
+     * @throws PropelException
+     */
+    public function countSoDetails(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSoDetailsPartial && !$this->isNew();
+        if (null === $this->collSoDetails || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSoDetails) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSoDetails());
+            }
+
+            $query = ChildSoDetailQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterBySoHeader($this)
+                ->count($con);
+        }
+
+        return count($this->collSoDetails);
+    }
+
+    /**
+     * Method called to associate a ChildSoDetail object to this object
+     * through the ChildSoDetail foreign key attribute.
+     *
+     * @param  ChildSoDetail $l ChildSoDetail
+     * @return $this|\SoHeader The current object (for fluent API support)
+     */
+    public function addSoDetail(ChildSoDetail $l)
+    {
+        if ($this->collSoDetails === null) {
+            $this->initSoDetails();
+            $this->collSoDetailsPartial = true;
+        }
+
+        if (!$this->collSoDetails->contains($l)) {
+            $this->doAddSoDetail($l);
+
+            if ($this->soDetailsScheduledForDeletion and $this->soDetailsScheduledForDeletion->contains($l)) {
+                $this->soDetailsScheduledForDeletion->remove($this->soDetailsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSoDetail $soDetail The ChildSoDetail object to add.
+     */
+    protected function doAddSoDetail(ChildSoDetail $soDetail)
+    {
+        $this->collSoDetails[]= $soDetail;
+        $soDetail->setSoHeader($this);
+    }
+
+    /**
+     * @param  ChildSoDetail $soDetail The ChildSoDetail object to remove.
+     * @return $this|ChildSoHeader The current object (for fluent API support)
+     */
+    public function removeSoDetail(ChildSoDetail $soDetail)
+    {
+        if ($this->getSoDetails()->contains($soDetail)) {
+            $pos = $this->collSoDetails->search($soDetail);
+            $this->collSoDetails->remove($pos);
+            if (null === $this->soDetailsScheduledForDeletion) {
+                $this->soDetailsScheduledForDeletion = clone $this->collSoDetails;
+                $this->soDetailsScheduledForDeletion->clear();
+            }
+            $this->soDetailsScheduledForDeletion[]= clone $soDetail;
+            $soDetail->setSoHeader(null);
+        }
+
+        return $this;
     }
 
     /**
@@ -11268,8 +11573,14 @@ abstract class SoHeader implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collSoDetails) {
+                foreach ($this->collSoDetails as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collSoDetails = null;
     }
 
     /**

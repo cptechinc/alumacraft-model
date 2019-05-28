@@ -3,6 +3,8 @@
 namespace Base;
 
 use \SoDetailQuery as ChildSoDetailQuery;
+use \SoHeader as ChildSoHeader;
+use \SoHeaderQuery as ChildSoHeaderQuery;
 use \Exception;
 use \PDO;
 use Map\SoDetailTableMap;
@@ -725,6 +727,11 @@ abstract class SoDetail implements ActiveRecordInterface
      * @var        string
      */
     protected $dummy;
+
+    /**
+     * @var        ChildSoHeader
+     */
+    protected $aSoHeader;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -1938,6 +1945,10 @@ abstract class SoDetail implements ActiveRecordInterface
         if ($this->oehdnbr !== $v) {
             $this->oehdnbr = $v;
             $this->modifiedColumns[SoDetailTableMap::COL_OEHDNBR] = true;
+        }
+
+        if ($this->aSoHeader !== null && $this->aSoHeader->getOehdnbr() !== $v) {
+            $this->aSoHeader = null;
         }
 
         return $this;
@@ -4181,6 +4192,9 @@ abstract class SoDetail implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
+        if ($this->aSoHeader !== null && $this->oehdnbr !== $this->aSoHeader->getOehdnbr()) {
+            $this->aSoHeader = null;
+        }
     } // ensureConsistency
 
     /**
@@ -4220,6 +4234,7 @@ abstract class SoDetail implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aSoHeader = null;
         } // if (deep)
     }
 
@@ -4322,6 +4337,18 @@ abstract class SoDetail implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aSoHeader !== null) {
+                if ($this->aSoHeader->isModified() || $this->aSoHeader->isNew()) {
+                    $affectedRows += $this->aSoHeader->save($con);
+                }
+                $this->setSoHeader($this->aSoHeader);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -5294,10 +5321,11 @@ abstract class SoDetail implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
         if (isset($alreadyDumpedObjects['SoDetail'][$this->hashCode()])) {
@@ -5407,6 +5435,23 @@ abstract class SoDetail implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->aSoHeader) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'soHeader';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'SO_HEADER';
+                        break;
+                    default:
+                        $key = 'SoHeader';
+                }
+
+                $result[$key] = $this->aSoHeader->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+        }
 
         return $result;
     }
@@ -6396,8 +6441,15 @@ abstract class SoDetail implements ActiveRecordInterface
         $validPk = null !== $this->getOehdnbr() &&
             null !== $this->getOedtline();
 
-        $validPrimaryKeyFKs = 0;
+        $validPrimaryKeyFKs = 1;
         $primaryKeyFKs = [];
+
+        //relation SO_DETAIL_fk_760d3d to table SO_HEADER
+        if ($this->aSoHeader && $hash = spl_object_hash($this->aSoHeader)) {
+            $primaryKeyFKs[] = $hash;
+        } else {
+            $validPrimaryKeyFKs = false;
+        }
 
         if ($validPk) {
             return crc32(json_encode($this->getPrimaryKey(), JSON_UNESCAPED_UNICODE));
@@ -6579,12 +6631,66 @@ abstract class SoDetail implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildSoHeader object.
+     *
+     * @param  ChildSoHeader $v
+     * @return $this|\SoDetail The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setSoHeader(ChildSoHeader $v = null)
+    {
+        if ($v === null) {
+            $this->setOehdnbr(0);
+        } else {
+            $this->setOehdnbr($v->getOehdnbr());
+        }
+
+        $this->aSoHeader = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildSoHeader object, it will not be re-added.
+        if ($v !== null) {
+            $v->addSoDetail($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildSoHeader object
+     *
+     * @param  ConnectionInterface $con Optional Connection object.
+     * @return ChildSoHeader The associated ChildSoHeader object.
+     * @throws PropelException
+     */
+    public function getSoHeader(ConnectionInterface $con = null)
+    {
+        if ($this->aSoHeader === null && ($this->oehdnbr != 0)) {
+            $this->aSoHeader = ChildSoHeaderQuery::create()->findPk($this->oehdnbr, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aSoHeader->addSoDetails($this);
+             */
+        }
+
+        return $this->aSoHeader;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
+        if (null !== $this->aSoHeader) {
+            $this->aSoHeader->removeSoDetail($this);
+        }
         $this->oehdnbr = null;
         $this->oedtline = null;
         $this->inititemnbr = null;
@@ -6701,6 +6807,7 @@ abstract class SoDetail implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
+        $this->aSoHeader = null;
     }
 
     /**
