@@ -12,7 +12,7 @@ use Base\SoHeader as BaseSoHeader;
  * long as it does not already exist in the output directory.
  *
  */
-class SoHeader extends BaseSoHeader
-{
-
+class SoHeader extends BaseSoHeader {
+	const APPROVED_TRUE  = 'YES';
+	const APPROVED_FALSE = 'NO';
 }
